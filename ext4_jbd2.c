@@ -416,8 +416,6 @@ void ext4_fc_del(struct inode *inode)
 	if (list_empty(&EXT4_I(inode)->i_fc_list))
 		return;
 
-	//ext4_fc_disable(inode->i_sb, EXT4_FC_REASON_DELETE);
-
 restart:
 	spin_lock(&EXT4_SB(inode->i_sb)->s_fc_lock);
 	if (ext4_test_inode_state(inode, EXT4_STATE_FC_DATA_SUBMIT)) {
@@ -1226,6 +1224,12 @@ static void ext4_journal_fc_cleanup_cb(journal_t *journal)
 	struct ext4_inode_info *iter;
 	struct ext4_fc_dentry_update *fc_dentry;
 
+	if (test_opt2(sb, JOURNAL_FC_PMEM)) {
+		// [TODO]: Increment gen ID
+		trace_ext4_journal_fc_stats(sb);
+		return;
+	}
+	
 	spin_lock(&sbi->s_fc_lock);
 	while (!list_empty(&sbi->s_fc_q)) {
 		iter = list_first_entry(&sbi->s_fc_q,

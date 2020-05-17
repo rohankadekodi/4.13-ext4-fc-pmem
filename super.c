@@ -1000,12 +1000,14 @@ static struct inode *ext4_alloc_inode(struct super_block *sb)
 static int ext4_drop_inode(struct inode *inode)
 {
 	int drop = generic_drop_inode(inode);
+	/*
 	if (drop) {
 		spin_unlock(&inode->i_lock);
 		if (!list_empty(&EXT4_I(inode)->i_fc_list))
 			drop = 0;
 		spin_lock(&inode->i_lock);
 	}
+	*/
 
 	trace_ext4_drop_inode(inode, drop);
 	return drop;
@@ -1014,7 +1016,6 @@ static int ext4_drop_inode(struct inode *inode)
 static void ext4_i_callback(struct rcu_head *head)
 {
 	struct inode *inode = container_of(head, struct inode, i_rcu);
-	//ext4_fc_del(inode);
 	kmem_cache_free(ext4_inode_cachep, EXT4_I(inode));
 }
 
@@ -1076,6 +1077,7 @@ static void destroy_inodecache(void)
 
 void ext4_clear_inode(struct inode *inode)
 {
+	ext4_fc_del(inode);
 	invalidate_inode_buffers(inode);
 	clear_inode(inode);
 	dquot_drop(inode);
